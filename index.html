@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Directory</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 5px 0; }
+        a { text-decoration: none; color: #0366d6; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>Repository File Directory</h1>
+    <ul id="file-list">Loading...</ul>
+
+    <script>
+        const owner = 'your-username'; // GitHub username
+        const repo = 'your-repository-name'; // Repository name
+        const branch = 'main'; // Branch to pull from, typically 'main' or 'master'
+
+        async function fetchRepoContents(path = '') {
+            const apiURL = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+            try {
+                const response = await fetch(apiURL);
+                if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
+                const files = await response.json();
+                
+                const fileList = document.getElementById('file-list');
+                fileList.innerHTML = ''; // Clear loading message
+
+                files.forEach(file => {
+                    const listItem = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = file.html_url;
+                    link.textContent = file.name;
+
+                    // Indicate if it's a directory
+                    if (file.type === 'dir') {
+                        link.href = '#';
+                        link.onclick = (e) => {
+                            e.preventDefault();
+                            fetchRepoContents(file.path); // Load the directory contents
+                        };
+                        link.textContent += '/';
+                    }
+
+                    listItem.appendChild(link);
+                    fileList.appendChild(listItem);
+                });
+
+            } catch (error) {
+                console.error('Error fetching repo contents:', error);
+                document.getElementById('file-list').textContent = 'Error loading files.';
+            }
+        }
+
+        // Initial load of the repository contents
+        fetchRepoContents();
+    </script>
+</body>
+</html>
